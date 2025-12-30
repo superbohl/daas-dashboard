@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DAAS-PG Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Source Sans 3', system-ui, sans-serif; }
+    .modal-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+// ═══════════════════════════════════════════════════════════════════════════
+// EMBEDDED DATA - This gets updated when you "Save As New File"
+// ═══════════════════════════════════════════════════════════════════════════
+const EMBEDDED_DATA = {
+  meta: {
+    savedDate: "2025-10-01",
+    savedBy: "",
+    version: "2.0"
+  },
+  selectedMonth: "October",
+  selectedYear: "2025",
+  team: [
+    { id: 1, name: "David Bohl", title: "DD", level: "Director", status: "Active", duties: { procurement: false, monitoring: true, contracts: true, areaPlan: true, other: false } },
+    { id: 2, name: "Becky K. Priest", title: "DM", level: "Manager", status: "Active", duties: { procurement: true, monitoring: true, contracts: false, areaPlan: true, other: false } },
+    { id: 3, name: "Lisseth Tupe", title: "Staff Analyst II", level: "Staff", status: "Active", duties: { procurement: true, monitoring: false, contracts: true, areaPlan: false, other: false } },
+    { id: 4, name: "Nicole Woodward", title: "Staff Analyst II", level: "Staff", status: "Active", duties: { procurement: false, monitoring: true, contracts: true, areaPlan: false, other: true } },
+    { id: 5, name: "Ariana Bueno", title: "Staff Analyst II", level: "Staff", status: "Active", duties: { procurement: true, monitoring: false, contracts: false, areaPlan: true, other: false } },
+    { id: 6, name: "Mark Burda", title: "Staff Analyst I", level: "Staff", status: "Active", duties: { procurement: false, monitoring: true, contracts: false, areaPlan: false, other: true } },
+    { id: 7, name: "Ehab Soliman", title: "Staff Analyst II Trainee", level: "Trainee", status: "Active", duties: { procurement: true, monitoring: false, contracts: false, areaPlan: false, other: false } },
+    { id: 8, name: "Lisa Lopez", title: "Exec Admin Assistant", level: "Admin", status: "Active", duties: { procurement: false, monitoring: false, contracts: false, areaPlan: false, other: true } },
+  ],
+  metrics: [
+    { id: 1, label: "New Contracts", value: 3 },
+    { id: 2, label: "Amendments", value: 5 },
+    { id: 3, label: "Executed Contracts", value: 8 },
+    { id: 4, label: "Bids", value: 2 },
+    { id: 5, label: "Board Items", value: 4 },
+    { id: 6, label: "Monitoring Reports Routing", value: 12 },
+    { id: 7, label: "Completed Monitoring", value: 10 },
+    { id: 8, label: "Grant Opportunities", value: 1 },
+  ],
+  activities: [
+    { id: 1, category: "Problem Solving", description: "Contract turnaround time exceeding 5 days", owner: "Nicole W.", status: "In Progress", date: "2025-10-15" },
+    { id: 2, category: "Improvement Idea", description: "Automate monitoring report distribution", owner: "Mark B.", status: "Open", date: "2025-10-12" },
+    { id: 3, category: "Success Story", description: "Reduced amendment processing by 2 days", owner: "Ariana B.", status: "Completed", date: "2025-10-08" },
+    { id: 4, category: "Special Thanks", description: "Great teamwork on the Q3 Board presentation", owner: "Becky P.", status: "Completed", date: "2025-10-10" },
+  ],
+  announcements: [
+    { id: 1, text: "Monthly team meeting moved to Friday 10am", date: "2025-10-05" },
+  ],
+  birthdays: [
+    { id: 1, name: "Mark B.", date: "October 18" },
+  ]
+};
+// ═══════════════════════════════════════════════════════════════════════════
+
+const { useState, useEffect } = React;
+
+// Icons as simple SVG components
+const Icons = {
+  Users: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" /></svg>,
+  TrendingUp: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>,
+  FileText: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
+  Award: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>,
+  Lightbulb: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>,
+  CheckCircle: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  Calendar: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
+  Plus: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
+  X: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>,
+  Edit: () => <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>,
+  Trash: () => <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>,
+  Save: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>,
+  ChevronDown: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>,
+  ChevronUp: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>,
+  Megaphone: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" /></svg>,
+  Cake: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z" /></svg>,
+};
+
+const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const years = ["2024", "2025", "2026", "2027"];
+const statusOptions = ["Active", "Out", "Leave", "Remote"];
+const levelOptions = ["Director", "Manager", "Staff", "Trainee", "Admin"];
+const activityCategories = ["Problem Solving", "Improvement Idea", "Standard Work", "Special Project", "Success Story", "Special Thanks", "Follow-up"];
+const activityStatuses = ["Open", "In Progress", "Completed", "On Hold"];
+
+function DAASDashboard() {
+  const [selectedMonth, setSelectedMonth] = useState(EMBEDDED_DATA.selectedMonth);
+  const [selectedYear, setSelectedYear] = useState(EMBEDDED_DATA.selectedYear);
+  const [team, setTeam] = useState(EMBEDDED_DATA.team);
+  const [metrics, setMetrics] = useState(EMBEDDED_DATA.metrics);
+  const [activities, setActivities] = useState(EMBEDDED_DATA.activities);
+  const [announcements, setAnnouncements] = useState(EMBEDDED_DATA.announcements);
+  const [birthdays, setBirthdays] = useState(EMBEDDED_DATA.birthdays);
+  const [expandedSections, setExpandedSections] = useState({
+    metrics: true, team: true, duties: false, activities: true, culture: true, announcements: true
+  });
+  const [modal, setModal] = useState({ open: false, type: null, data: null });
+  const [editingMetric, setEditingMetric] = useState(null);
+
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const nextId = (arr) => Math.max(0, ...arr.map(i => i.id)) + 1;
+
+  // Team CRUD
+  const addTeamMember = (member) => {
+    setTeam(prev => [...prev, { ...member, id: nextId(prev) }]);
+    setModal({ open: false, type: null, data: null });
+  };
+  const updateTeamMember = (member) => {
+    setTeam(prev => prev.map(p => p.id === member.id ? member : p));
+    setModal({ open: false, type: null, data: null });
+  };
+  const removeTeamMember = (id) => {
+    if (confirm("Remove this team member?")) {
+      setTeam(prev => prev.filter(p => p.id !== id));
+    }
+  };
+  const toggleStatus = (id) => {
+    setTeam(prev => prev.map(p => 
+      p.id === id ? { ...p, status: p.status === "Active" ? "Out" : "Active" } : p
+    ));
+  };
+
+  // Metrics CRUD
+  const addMetric = (metric) => {
+    setMetrics(prev => [...prev, { ...metric, id: nextId(prev) }]);
+    setModal({ open: false, type: null, data: null });
+  };
+  const updateMetricValue = (id, value) => {
+    setMetrics(prev => prev.map(m => m.id === id ? { ...m, value: parseInt(value) || 0 } : m));
+    setEditingMetric(null);
+  };
+  const removeMetric = (id) => {
+    if (confirm("Remove this metric?")) {
+      setMetrics(prev => prev.filter(m => m.id !== id));
+    }
+  };
+
+  // Activities CRUD
+  const addActivity = (activity) => {
+    setActivities(prev => [...prev, { ...activity, id: nextId(prev) }]);
+    setModal({ open: false, type: null, data: null });
+  };
+  const updateActivity = (activity) => {
+    setActivities(prev => prev.map(a => a.id === activity.id ? activity : a));
+    setModal({ open: false, type: null, data: null });
+  };
+  const removeActivity = (id) => {
+    if (confirm("Remove this item?")) {
+      setActivities(prev => prev.filter(a => a.id !== id));
+    }
+  };
+
+  // Announcements CRUD
+  const addAnnouncement = (item) => {
+    setAnnouncements(prev => [...prev, { ...item, id: nextId(prev) }]);
+    setModal({ open: false, type: null, data: null });
+  };
+  const removeAnnouncement = (id) => {
+    setAnnouncements(prev => prev.filter(a => a.id !== id));
+  };
+
+  // Birthdays CRUD
+  const addBirthday = (item) => {
+    setBirthdays(prev => [...prev, { ...item, id: nextId(prev) }]);
+    setModal({ open: false, type: null, data: null });
+  };
+  const removeBirthday = (id) => {
+    setBirthdays(prev => prev.filter(b => b.id !== id));
+  };
+
+  // Save as new HTML file
+  const saveAsNewFile = () => {
+    const currentData = {
+      meta: {
+        savedDate: new Date().toISOString().split('T')[0],
+        savedBy: "",
+        version: "2.0"
+      },
+      selectedMonth,
+      selectedYear,
+      team,
+      metrics,
+      activities,
+      announcements,
+      birthdays
+    };
+
+    // Get the current HTML and replace the EMBEDDED_DATA
+    let html = document.documentElement.outerHTML;
+    const dataRegex = /const EMBEDDED_DATA = \{[\s\S]*?\n\};/;
+    const newDataString = `const EMBEDDED_DATA = ${JSON.stringify(currentData, null, 2)};`;
+    html = '<!DOCTYPE html>\n<html lang="en">' + html.slice(html.indexOf('<head>'));
+    html = html.replace(dataRegex, newDataString);
+
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `DAAS_Dashboard_${selectedMonth}_${selectedYear}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const grandTotal = metrics.reduce((sum, m) => sum + m.value, 0);
+  const activeCount = team.filter(p => p.status === "Active").length;
+  const openItems = activities.filter(a => a.status !== "Completed").length;
+
+  // Section Header Component
+  const SectionHeader = ({ title, icon: Icon, section, color, onAdd }) => (
+    <div className="flex items-center gap-2">
+      <button 
+        onClick={() => toggleSection(section)}
+        className="flex-1 flex items-center justify-between p-3 rounded-lg transition-all duration-200 hover:brightness-110"
+        style={{ background: color }}
+      >
+        <div className="flex items-center gap-2 text-white font-semibold">
+          <Icon />
+          <span>{title}</span>
+        </div>
+        {expandedSections[section] ? <Icons.ChevronUp /> : <Icons.ChevronDown />}
+      </button>
+      {onAdd && (
+        <button 
+          onClick={onAdd}
+          className="p-3 rounded-lg text-white hover:brightness-110 transition-all"
+          style={{ background: color }}
+          title={`Add ${title}`}
+        >
+          <Icons.Plus />
+        </button>
+      )}
+    </div>
+  );
+
+  // Status Badge Component
+  const StatusBadge = ({ status }) => {
+    const colors = {
+      Active: "bg-emerald-100 text-emerald-700 border-emerald-200",
+      Out: "bg-amber-100 text-amber-700 border-amber-200",
+      Leave: "bg-blue-100 text-blue-700 border-blue-200",
+      Remote: "bg-purple-100 text-purple-700 border-purple-200",
+      Open: "bg-rose-100 text-rose-700 border-rose-200",
+      "In Progress": "bg-amber-100 text-amber-700 border-amber-200",
+      "On Hold": "bg-gray-100 text-gray-700 border-gray-200",
+      Completed: "bg-emerald-100 text-emerald-700 border-emerald-200"
+    };
+    return (
+      <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${colors[status] || "bg-gray-100 text-gray-700"}`}>
+        {status}
+      </span>
+    );
+  };
+
+  // Category Badge Component
+  const CategoryBadge = ({ category }) => {
+    const colors = {
+      "Problem Solving": "bg-rose-500",
+      "Improvement Idea": "bg-blue-500",
+      "Standard Work": "bg-teal-500",
+      "Special Project": "bg-indigo-500",
+      "Success Story": "bg-emerald-500",
+      "Special Thanks": "bg-purple-500",
+      "Follow-up": "bg-gray-500"
+    };
+    return (
+      <span className={`px-2 py-0.5 rounded text-xs font-medium text-white ${colors[category] || "bg-gray-500"}`}>
+        {category}
+      </span>
+    );
+  };
+
+  // Modal Component
+  const Modal = () => {
+    if (!modal.open) return null;
+    
+    const [formData, setFormData] = useState(modal.data || {});
+    
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      switch(modal.type) {
+        case 'addTeam':
+          addTeamMember({ ...formData, duties: { procurement: false, monitoring: false, contracts: false, areaPlan: false, other: false } });
+          break;
+        case 'editTeam':
+          updateTeamMember(formData);
+          break;
+        case 'addMetric':
+          addMetric({ label: formData.label, value: parseInt(formData.value) || 0 });
+          break;
+        case 'addActivity':
+          addActivity({ ...formData, date: new Date().toISOString().split('T')[0] });
+          break;
+        case 'editActivity':
+          updateActivity(formData);
+          break;
+        case 'addAnnouncement':
+          addAnnouncement({ text: formData.text, date: new Date().toISOString().split('T')[0] });
+          break;
+        case 'addBirthday':
+          addBirthday({ name: formData.name, date: formData.date });
+          break;
+      }
+    };
+
+    return (
+      <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-between p-4 border-b">
+            <h3 className="font-semibold text-lg text-slate-800">
+              {modal.type.includes('add') ? 'Add New' : 'Edit'} {modal.type.replace('add', '').replace('edit', '').replace('Team', 'Team Member').replace('Activity', 'Activity Item')}
+            </h3>
+            <button onClick={() => setModal({ open: false, type: null, data: null })} className="p-1 hover:bg-slate-100 rounded">
+              <Icons.X />
+            </button>
+          </div>
+          <form onSubmit={handleSubmit} className="p-4 space-y-4">
+            {(modal.type === 'addTeam' || modal.type === 'editTeam') && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                  <input type="text" required value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
+                  <input type="text" required value={formData.title || ''} onChange={e => setFormData({...formData, title: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Level</label>
+                    <select value={formData.level || 'Staff'} onChange={e => setFormData({...formData, level: e.target.value})}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      {levelOptions.map(l => <option key={l} value={l}>{l}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
+                    <select value={formData.status || 'Active'} onChange={e => setFormData({...formData, status: e.target.value})}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                </div>
+                {modal.type === 'editTeam' && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Duties</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {Object.entries(formData.duties || {}).map(([key, val]) => (
+                        <label key={key} className="flex items-center gap-2 text-sm">
+                          <input type="checkbox" checked={val} onChange={e => setFormData({...formData, duties: {...formData.duties, [key]: e.target.checked}})} />
+                          {key.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase())}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+            {modal.type === 'addMetric' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Metric Name</label>
+                  <input type="text" required value={formData.label || ''} onChange={e => setFormData({...formData, label: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Initial Value</label>
+                  <input type="number" value={formData.value || 0} onChange={e => setFormData({...formData, value: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+              </>
+            )}
+            {(modal.type === 'addActivity' || modal.type === 'editActivity') && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                  <select required value={formData.category || ''} onChange={e => setFormData({...formData, category: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">Select category...</option>
+                    {activityCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                  <textarea required rows={3} value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Owner</label>
+                    <input type="text" required value={formData.owner || ''} onChange={e => setFormData({...formData, owner: e.target.value})}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
+                    <select value={formData.status || 'Open'} onChange={e => setFormData({...formData, status: e.target.value})}
+                      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      {activityStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </>
+            )}
+            {modal.type === 'addAnnouncement' && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Announcement</label>
+                <textarea required rows={3} value={formData.text || ''} onChange={e => setFormData({...formData, text: e.target.value})}
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+            )}
+            {modal.type === 'addBirthday' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                  <input type="text" required value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Date (e.g., "October 18")</label>
+                  <input type="text" required value={formData.date || ''} onChange={e => setFormData({...formData, date: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+              </>
+            )}
+            <div className="flex gap-2 pt-2">
+              <button type="button" onClick={() => setModal({ open: false, type: null, data: null })}
+                className="flex-1 px-4 py-2 border rounded-lg hover:bg-slate-50 transition-colors">
+                Cancel
+              </button>
+              <button type="submit"
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                {modal.type.includes('add') ? 'Add' : 'Save'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen" style={{ background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%)" }}>
+      {/* Header */}
+      <header className="sticky top-0 z-10 backdrop-blur-md bg-white/80 border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight" style={{ color: "#1e3a5f" }}>
+                DAAS-PG Dashboard
+              </h1>
+              <p className="text-sm text-slate-500">Safety • Quality • Delivery • Timeliness</p>
+            </div>
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Icons.Calendar />
+                <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  {months.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+                <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  {years.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+              <button onClick={saveAsNewFile}
+                className="flex items-center gap-2 px-4 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium">
+                <Icons.Save /> Save As New File
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        {/* Quick Stats Row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: "Grand Total", value: grandTotal, color: "#f59e0b", icon: Icons.TrendingUp },
+            { label: "Active Staff", value: `${activeCount}/${team.length}`, color: "#10b981", icon: Icons.Users },
+            { label: "Open Items", value: openItems, color: openItems > 3 ? "#ef4444" : "#6366f1", icon: Icons.FileText },
+            { label: "This Month", value: selectedMonth.slice(0,3), color: "#3b82f6", icon: Icons.Calendar },
+          ].map((stat, i) => (
+            <div key={i} className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-slate-400 font-medium">{stat.label}</p>
+                  <p className="text-2xl font-bold mt-1" style={{ color: stat.color }}>{stat.value}</p>
+                </div>
+                <div className="p-2 rounded-lg" style={{ backgroundColor: `${stat.color}15` }}>
+                  <stat.icon />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Left Column - Metrics */}
+          <div className="lg:col-span-1 space-y-4">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+              <SectionHeader title="Monthly Metrics" icon={Icons.TrendingUp} section="metrics" color="#1e3a5f" 
+                onAdd={() => setModal({ open: true, type: 'addMetric', data: null })} />
+              {expandedSections.metrics && (
+                <div className="p-4 space-y-2">
+                  {metrics.map(metric => (
+                    <div key={metric.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors group">
+                      <span className="text-sm text-slate-600">{metric.label}</span>
+                      {editingMetric === metric.id ? (
+                        <div className="flex items-center gap-1">
+                          <input type="number" defaultValue={metric.value}
+                            className="w-16 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            onKeyDown={(e) => e.key === 'Enter' && updateMetricValue(metric.id, e.target.value)}
+                            onBlur={(e) => updateMetricValue(metric.id, e.target.value)}
+                            autoFocus />
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">
+                            {metric.value}
+                          </span>
+                          <button onClick={() => setEditingMetric(metric.id)}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-blue-500 transition-opacity">
+                            <Icons.Edit />
+                          </button>
+                          <button onClick={() => removeMetric(metric.id)}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition-opacity">
+                            <Icons.Trash />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between py-2 px-3 rounded-lg mt-2" style={{ backgroundColor: "#fef3c7" }}>
+                    <span className="text-sm font-semibold text-amber-800">TOTAL</span>
+                    <span className="font-bold text-amber-800 text-lg">{grandTotal}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Announcements */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+              <SectionHeader title="Announcements" icon={Icons.Megaphone} section="announcements" color="#f59e0b"
+                onAdd={() => setModal({ open: true, type: 'addAnnouncement', data: null })} />
+              {expandedSections.announcements && (
+                <div className="p-4 space-y-2">
+                  {announcements.length === 0 ? (
+                    <p className="text-sm text-slate-400 text-center py-2">No announcements</p>
+                  ) : announcements.map(a => (
+                    <div key={a.id} className="flex items-start justify-between gap-2 py-2 px-3 rounded-lg bg-amber-50 group">
+                      <div>
+                        <p className="text-sm text-slate-700">{a.text}</p>
+                        <p className="text-xs text-slate-400 mt-1">{a.date}</p>
+                      </div>
+                      <button onClick={() => removeAnnouncement(a.id)}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition-opacity">
+                        <Icons.X />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Birthdays */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+              <div className="flex items-center gap-2">
+                <button onClick={() => toggleSection('birthdays')}
+                  className="flex-1 flex items-center justify-between p-3 rounded-lg transition-all duration-200 hover:brightness-110"
+                  style={{ background: "#ec4899" }}>
+                  <div className="flex items-center gap-2 text-white font-semibold">
+                    <Icons.Cake />
+                    <span>Birthdays</span>
+                  </div>
+                  {expandedSections.birthdays ? <Icons.ChevronUp /> : <Icons.ChevronDown />}
+                </button>
+                <button onClick={() => setModal({ open: true, type: 'addBirthday', data: null })}
+                  className="p-3 rounded-lg text-white hover:brightness-110 transition-all"
+                  style={{ background: "#ec4899" }}>
+                  <Icons.Plus />
+                </button>
+              </div>
+              {expandedSections.birthdays && (
+                <div className="p-4 space-y-2">
+                  {birthdays.length === 0 ? (
+                    <p className="text-sm text-slate-400 text-center py-2">No birthdays this month</p>
+                  ) : birthdays.map(b => (
+                    <div key={b.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-pink-50 group">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">🎂</span>
+                        <div>
+                          <p className="text-sm font-medium text-slate-700">{b.name}</p>
+                          <p className="text-xs text-slate-400">{b.date}</p>
+                        </div>
+                      </div>
+                      <button onClick={() => removeBirthday(b.id)}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition-opacity">
+                        <Icons.X />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Middle Column - Team */}
+          <div className="lg:col-span-1 space-y-4">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+              <SectionHeader title="Team Status" icon={Icons.Users} section="team" color="#0d9488"
+                onAdd={() => setModal({ open: true, type: 'addTeam', data: null })} />
+              {expandedSections.team && (
+                <div className="p-4">
+                  <div className="space-y-2">
+                    {team.map(person => (
+                      <div key={person.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors group">
+                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => toggleStatus(person.id)}>
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                            style={{ backgroundColor: person.status === "Active" ? "#10b981" : person.status === "Remote" ? "#8b5cf6" : "#f59e0b" }}>
+                            {person.name.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-slate-700">{person.name}</p>
+                            <p className="text-xs text-slate-400">{person.title}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <StatusBadge status={person.status} />
+                          <button onClick={() => setModal({ open: true, type: 'editTeam', data: person })}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-blue-500 transition-opacity">
+                            <Icons.Edit />
+                          </button>
+                          <button onClick={() => removeTeamMember(person.id)}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition-opacity">
+                            <Icons.Trash />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Duties Matrix */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+              <SectionHeader title="Tasks / Duties Matrix" icon={Icons.CheckCircle} section="duties" color="#6366f1" />
+              {expandedSections.duties && (
+                <div className="p-4 overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="text-slate-500">
+                        <th className="text-left py-1 px-1">Name</th>
+                        <th className="text-center py-1 px-1">Proc</th>
+                        <th className="text-center py-1 px-1">Mon</th>
+                        <th className="text-center py-1 px-1">Cont</th>
+                        <th className="text-center py-1 px-1">Area</th>
+                        <th className="text-center py-1 px-1">Other</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {team.map(person => (
+                        <tr key={person.id} className="border-t border-slate-100">
+                          <td className="py-1.5 px-1 font-medium text-slate-600">{person.name.split(' ')[0]}</td>
+                          {Object.entries(person.duties).map(([duty, checked]) => (
+                            <td key={duty} className="text-center py-1.5 px-1">
+                              {checked && <span className="text-emerald-500">✓</span>}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p className="text-xs text-slate-400 mt-2 text-center">Edit team members to change duties</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column - Activities */}
+          <div className="lg:col-span-1 space-y-4">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+              <SectionHeader title="Continuous Improvement" icon={Icons.Lightbulb} section="activities" color="#dc2626"
+                onAdd={() => setModal({ open: true, type: 'addActivity', data: null })} />
+              {expandedSections.activities && (
+                <div className="p-4 space-y-3">
+                  {activities.filter(a => ["Problem Solving", "Improvement Idea", "Standard Work", "Special Project", "Follow-up"].includes(a.category)).map(activity => (
+                    <div key={activity.id} className="p-3 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors group">
+                      <div className="flex items-start justify-between gap-2">
+                        <CategoryBadge category={activity.category} />
+                        <div className="flex items-center gap-1">
+                          <StatusBadge status={activity.status} />
+                          <button onClick={() => setModal({ open: true, type: 'editActivity', data: activity })}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-blue-500 transition-opacity">
+                            <Icons.Edit />
+                          </button>
+                          <button onClick={() => removeActivity(activity.id)}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition-opacity">
+                            <Icons.Trash />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-sm text-slate-700 mt-2">{activity.description}</p>
+                      <div className="flex items-center justify-between mt-2 text-xs text-slate-400">
+                        <span>{activity.owner}</span>
+                        <span>{activity.date}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {activities.filter(a => ["Problem Solving", "Improvement Idea", "Standard Work", "Special Project", "Follow-up"].includes(a.category)).length === 0 && (
+                    <p className="text-sm text-slate-400 text-center py-4">No active CI items</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+              <SectionHeader title="Team Recognition" icon={Icons.Award} section="culture" color="#7c3aed"
+                onAdd={() => setModal({ open: true, type: 'addActivity', data: { category: 'Success Story' } })} />
+              {expandedSections.culture && (
+                <div className="p-4 space-y-3">
+                  {activities.filter(a => ["Success Story", "Special Thanks"].includes(a.category)).map(activity => (
+                    <div key={activity.id} className="p-3 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors group">
+                      <div className="flex items-start justify-between gap-2">
+                        <CategoryBadge category={activity.category} />
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-slate-400">{activity.date}</span>
+                          <button onClick={() => removeActivity(activity.id)}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition-opacity">
+                            <Icons.Trash />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-sm text-slate-700 mt-2">{activity.description}</p>
+                      <p className="text-xs text-slate-400 mt-1">— {activity.owner}</p>
+                    </div>
+                  ))}
+                  {activities.filter(a => ["Success Story", "Special Thanks"].includes(a.category)).length === 0 && (
+                    <p className="text-sm text-slate-400 text-center py-4">No recognition items yet</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="text-center py-4 text-xs text-slate-400">
+          <p>DAAS-PG Dashboard • {selectedMonth} {selectedYear} • Saved: {EMBEDDED_DATA.meta.savedDate}</p>
+          <p className="mt-1">Click "Save As New File" to create a snapshot with your changes</p>
+        </footer>
+      </main>
+
+      <Modal />
+    </div>
+  );
+}
+
+ReactDOM.render(<DAASDashboard />, document.getElementById('root'));
+</script>
+</body>
+</html>
