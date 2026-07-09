@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Remote Desert Region WIG Scoreboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-950:#081625;
+    --navy-900:#0B1F33;
+    --navy-800:#12304F;
+    --navy-700:#1C3F66;
+    --navy-600:#2A5380;
+    --gold-500:#C9A227;
+    --gold-300:#E3C868;
+    --gold-glow:rgba(201,162,39,0.35);
+    --paper-50:#F6F3EA;
+    --paper-100:#EFEAdc;
+    --ink-700:#2B3540;
+    --ink-500:#525C66;
+    --slate-500:#6B7785;
+    --rust-600:#9C4A3C;
+    --rust-100:#F1DAD4;
+    --sage-600:#54725A;
+    --sage-100:#DCE6DC;
+    --line:#D8D2C0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper-50);
+    color:var(--ink-700);
+    font-family:'Barlow',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 60px;}
+
+  .eyebrow{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    font-size:12.5px;
+    color:var(--gold-500);
+    background:var(--navy-900);
+    display:inline-block;
+    padding:5px 12px;
+    border-radius:3px;
+  }
+  h1{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:800;
+    font-size:clamp(28px,4.5vw,44px);
+    letter-spacing:-0.01em;
+    color:var(--navy-900);
+    margin:14px 0 6px;
+    line-height:1.05;
+  }
+  .wig-line{
+    font-size:15.5px;
+    color:var(--ink-500);
+    max-width:780px;
+    line-height:1.5;
+    margin:0 0 18px;
+  }
+  .wig-line b{color:var(--navy-800);font-weight:600;}
+
+  .header-strip{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    margin-bottom:26px;
+  }
+  .status-pill{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    font-size:13px;
+    padding:9px 16px;
+    border-radius:20px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .status-pill select{
+    font-family:inherit;font-weight:700;letter-spacing:0.06em;font-size:13px;
+    background:transparent;border:none;color:inherit;text-transform:uppercase;
+    -webkit-appearance:none;appearance:none;cursor:pointer;
+  }
+  .status-dot{width:9px;height:9px;border-radius:50%;flex:none;}
+  .status-ontrack{background:var(--sage-100);color:var(--sage-600);}
+  .status-ontrack .status-dot{background:var(--sage-600);}
+  .status-watch{background:#F3E9CB;color:#8A6C16;}
+  .status-watch .status-dot{background:#C9A227;}
+  .status-risk{background:var(--rust-100);color:var(--rust-600);}
+  .status-risk .status-dot{background:var(--rust-600);}
+
+  .countdown{
+    font-family:'Barlow Condensed',sans-serif;
+    background:var(--navy-900);
+    color:var(--paper-50);
+    border-radius:6px;
+    padding:8px 14px;
+    display:flex;
+    align-items:baseline;
+    gap:7px;
+  }
+  .countdown .num{font-weight:800;font-size:18px;color:var(--gold-300);}
+  .countdown .lbl{font-size:11.5px;text-transform:uppercase;letter-spacing:0.08em;color:#B9C4D2;}
+
+  .timeline-card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:22px 26px 30px;
+    margin-bottom:30px;
+  }
+  .section-label{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.1em;
+    font-size:12px;
+    color:var(--slate-500);
+    margin:0 0 14px;
+  }
+  .timeline-track{
+    position:relative;
+    height:6px;
+    background:var(--paper-100);
+    border-radius:4px;
+    margin:34px 6px 10px;
+  }
+  .timeline-fill{
+    position:absolute;top:0;left:0;height:100%;
+    background:linear-gradient(90deg,var(--navy-700),var(--gold-500));
+    border-radius:4px;
+  }
+  .tl-marker{
+    position:absolute;top:-5px;width:16px;height:16px;margin-left:-8px;
+    border-radius:50%;background:#fff;border:3px solid var(--navy-800);
+  }
+  .tl-marker.done{border-color:var(--sage-600);}
+  .tl-today{
+    position:absolute;top:-22px;transform:translateX(-50%);
+    font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;
+    color:var(--navy-900);white-space:nowrap;
+  }
+  .tl-today::after{
+    content:'';position:absolute;left:50%;top:20px;width:2px;height:18px;
+    background:var(--navy-900);transform:translateX(-50%);
+  }
+  .tl-labels{display:flex;justify-content:space-between;margin-top:6px;}
+  .tl-labels span{
+    font-size:11.5px;color:var(--slate-500);text-align:center;flex:1;
+    font-family:'Barlow Condensed',sans-serif;letter-spacing:0.02em;
+  }
+  .tl-labels span b{display:block;color:var(--navy-800);font-size:12.5px;}
+
+  .score-panel{
+    background:radial-gradient(ellipse at top,var(--navy-800),var(--navy-950) 75%);
+    border-radius:14px;
+    padding:26px 28px 22px;
+    margin-bottom:34px;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,0.06), 0 14px 30px -16px rgba(8,22,37,0.6);
+  }
+  .score-title{
+    font-family:'Barlow Condensed',sans-serif;
+    font-weight:800;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    font-size:13px;
+    color:var(--gold-300);
+    margin:0 0 4px;
+  }
+  .score-sub{font-size:13px;color:#A9B6C4;margin:0 0 18px;}
+  .score-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:18px;
+  }
+  .score-cell{
+    background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:10px;
+    padding:18px 18px 16px;
+  }
+  .score-cell-label{
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:13px;font-weight:700;letter-spacing:0.03em;
+    color:#D6DEE6;text-transform:uppercase;margin-bottom:3px;
+  }
+  .score-cell-sub{font-size:11.5px;color:#7E8FA0;margin-bottom:14px;}
+  .community-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;gap:10px;}
+  .community-row .cname{font-size:13.5px;color:#C7D1DB;flex:1;}
+  .pair-inputs{display:flex;align-items:center;gap:6px;}
+  .pair-inputs input{
+    width:50px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);
+    border-radius:4px;color:var(--gold-300);font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;font-size:15px;padding:3px 4px;text-align:center;
+  }
+  .pair-inputs span{color:#7E8FA0;font-size:13px;}
+  .toggle-light{display:flex;align-items:center;gap:10px;margin-top:14px;cursor:pointer;user-select:none;padding-top:12px;border-top:1px solid rgba(255,255,255,0.08);}
+  .toggle-bulb{width:14px;height:14px;border-radius:50%;background:#3A4A5C;flex:none;transition:background .15s;}
+  .toggle-bulb.on{background:var(--gold-300);box-shadow:0 0 10px var(--gold-glow);}
+  .toggle-text{font-size:13px;color:#C7D1DB;font-weight:500;}
+  .met-tag{font-size:11px;font-weight:700;margin-left:4px;}
+  .shared-target-input{
+    width:36px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);
+    border-radius:4px;color:var(--gold-300);font-family:'Barlow Condensed',sans-serif;
+    font-weight:700;font-size:13px;padding:2px 4px;text-align:center;
+  }
+  .metric-block{margin-bottom:12px;}
+  .metric-block .mlabel{font-size:11.5px;color:#8FA0B2;margin-bottom:4px;}
+
+  .section-heading{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px;}
+  .section-heading h2{
+    font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:19px;
+    color:var(--navy-900);margin:0;letter-spacing:-0.005em;
+  }
+  .section-heading .hint{font-size:12.5px;color:var(--slate-500);}
+  .group-feeds{
+    font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.05em;
+    text-transform:uppercase;color:#fff;background:var(--gold-500);
+    padding:3px 9px;border-radius:4px;display:inline-block;margin-bottom:18px;
+  }
+
+  .leading-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-bottom:14px;}
+  .leading-grid.single{grid-template-columns:1fr;max-width:560px;}
+  .lcard{
+    background:#fff;border:1px solid var(--line);border-radius:10px;
+    padding:18px 18px 16px;display:flex;flex-direction:column;
+  }
+  .lcard-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:8px;}
+  .lcard-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15.5px;color:var(--navy-900);line-height:1.25;}
+  .lcard-due{
+    font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;
+    color:#fff;background:var(--navy-700);padding:3px 8px;border-radius:4px;
+    white-space:nowrap;letter-spacing:0.03em;
+  }
+  .lcard-formula{font-size:11.5px;color:var(--slate-500);margin:-4px 0 12px;line-height:1.4;}
+  .lcard-bar-wrap{height:7px;background:var(--paper-100);border-radius:4px;margin:8px 0 4px;overflow:hidden;}
+  .lcard-bar{height:100%;border-radius:4px;}
+  .pace-onpace{background:var(--sage-600);}
+  .pace-watch{background:var(--gold-500);}
+  .pace-behind{background:var(--rust-600);}
+  .pace-neutral{background:var(--slate-500);}
+  .lcard-pct{font-size:12px;color:var(--slate-500);margin-bottom:12px;}
+  .lcard-pct b{color:var(--ink-700);}
+
+  .check-item{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;color:var(--ink-700);margin-bottom:7px;line-height:1.35;cursor:pointer;}
+  .check-item input{margin-top:2.5px;accent-color:var(--navy-800);width:15px;height:15px;flex:none;}
+
+  .metric-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:8px;gap:8px;}
+  .metric-row .mname{color:var(--ink-500);flex:1;}
+  .metric-row.headline .mname{color:var(--navy-900);font-weight:600;}
+  .metric-row input{
+    width:46px;border:1px solid var(--line);border-radius:4px;padding:3px 4px;text-align:center;
+    font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;color:var(--navy-900);
+  }
+  .metric-row span.slash{color:var(--slate-500);}
+  .target-line{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:6px;}
+  .target-line input{
+    width:54px;border:1px solid var(--line);border-radius:4px;padding:3px 4px;text-align:center;
+    font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--navy-900);
+  }
+  .target-line .unit{color:var(--slate-500);font-size:12.5px;}
+  .date-row{display:flex;align-items:center;gap:7px;font-size:12px;margin-bottom:8px;flex-wrap:wrap;}
+  .date-row .date-label{width:120px;color:var(--ink-500);font-size:12px;flex:none;}
+  .date-row input[type=date]{
+    font-family:'Barlow',sans-serif;font-size:12.5px;border:1px solid var(--line);
+    border-radius:4px;padding:3px 5px;color:var(--navy-900);
+  }
+  .date-row .arrow{color:var(--slate-500);font-size:12px;}
+  .no-data-note{font-size:11px;color:var(--slate-500);font-style:italic;margin-top:2px;}
+
+  .cadence{
+    background:var(--navy-900);border-radius:10px;padding:18px 22px;margin-top:18px;
+    display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;
+  }
+  .cadence-items{display:flex;flex-wrap:wrap;gap:22px;}
+  .cadence-item{display:flex;flex-direction:column;}
+  .cadence-item .k{font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--gold-300);text-transform:uppercase;letter-spacing:0.06em;font-weight:700;}
+  .cadence-item .v{font-size:13px;color:#D6DEE6;margin-top:2px;}
+  .cadence-actions{display:flex;align-items:center;gap:12px;}
+  .save-btn{
+    font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.03em;
+    background:var(--gold-500);color:var(--navy-950);border:none;border-radius:6px;
+    padding:10px 18px;font-size:13.5px;cursor:pointer;text-transform:uppercase;
+  }
+  .save-btn:hover{background:var(--gold-300);}
+  .reset-btn{
+    font-family:'Barlow',sans-serif;font-size:12.5px;color:#8FA0B2;background:none;border:none;
+    text-decoration:underline;cursor:pointer;padding:0;
+  }
+  .saved-note{font-size:12px;color:#8FA0B2;}
+
+  @media (max-width:880px){
+    .score-grid{grid-template-columns:1fr;}
+    .leading-grid{grid-template-columns:1fr;}
+    .cadence{flex-direction:column;align-items:flex-start;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <span class="eyebrow">OAA Programs · DAAS-PG · WIG Scoreboard</span>
+  <h1>Remote Desert Region Service Access &amp; Provider Participation</h1>
+  <p class="wig-line">By <b>June 2027</b>, improve service access and provider participation in the Remote Desert Region (Trona, Needles, and Lucerne Valley) by strengthening provider readiness, contracting clarity, and onboarding speed ahead of the <b>January 2027 RFP cycle</b> &mdash; resulting in expanded provider coverage and measurable growth in client access across these communities.</p>
+
+  <div class="header-strip">
+    <div class="status-pill status-ontrack" id="statusPill">
+      <span class="status-dot"></span>
+      <select id="statusSelect">
+        <option value="ontrack">On track</option>
+        <option value="watch">Needs attention</option>
+        <option value="risk">At risk</option>
+      </select>
+    </div>
+    <div class="countdown"><span class="num" id="cdWig">--</span><span class="lbl">days to WIG deadline</span></div>
+    <div class="countdown"><span class="num" id="cdRfp">--</span><span class="lbl">days to Jan 2027 RFP cycle</span></div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="timeline-card">
+    <p class="section-label">Roadmap</p>
+    <div class="timeline-track" id="timelineTrack">
+      <div class="timeline-fill" id="timelineFill"></div>
+      <div class="tl-today" id="tlToday" style="left:0%">Today</div>
+    </div>
+    <div class="tl-labels">
+      <span><b>Jun '26</b>Kickoff</span>
+      <span><b>Jul '26</b>Fiscal guidance gate</span>
+      <span><b>Aug '26</b>RFP &amp; contract gate</span>
+      <span><b>Dec '26</b>Outreach complete</span>
+      <span><b>Jan '27</b>RFP cycle &amp; awards</span>
+      <span><b>Jun '27</b>WIG deadline</span>
+    </div>
+  </div>
+
+  <!-- THE SCORE -->
+  <div class="score-panel">
+    <p class="score-title">The Score &middot; Lag Measures</p>
+    <p class="score-sub">The two outcomes this WIG ultimately exists to move &mdash; reviewed at quarterly review.</p>
+    <div class="score-grid">
+
+      <div class="score-cell">
+        <div class="score-cell-label">Remote Desert Region Provider Coverage</div>
+        <div class="score-cell-sub">Jan 2027 RFP cycle &middot; shared target: <input type="number" id="lag1sharedTgt" class="shared-target-input" value="2" min="0">+ bidders per community</div>
+
+        <div style="display:flex;align-items:baseline;gap:9px;margin:6px 0 16px;">
+          <span class="led" id="lag1MetCount" style="font-size:36px;">0</span>
+          <span style="font-size:13px;color:#A9B6C4;">of 3 communities at target</span>
+        </div>
+
+        <div class="community-row">
+          <span class="cname">Trona</span>
+          <div class="pair-inputs"><input type="number" id="lag1trona" value="0" min="0"><span>bidders</span><span class="met-tag" id="lag1tronaTag"></span></div>
+        </div>
+        <div class="community-row">
+          <span class="cname">Needles</span>
+          <div class="pair-inputs"><input type="number" id="lag1needles" value="0" min="0"><span>bidders</span><span class="met-tag" id="lag1needlesTag"></span></div>
+        </div>
+        <div class="community-row">
+          <span class="cname">Lucerne Valley</span>
+          <div class="pair-inputs"><input type="number" id="lag1lucerne" value="0" min="0"><span>bidders</span><span class="met-tag" id="lag1lucerneTag"></span></div>
+        </div>
+
+        <div class="toggle-light" id="lag1toggle">
+          <span class="toggle-bulb" id="lag1bulb"></span>
+          <span class="toggle-text">New Remote Desert Region provider secured</span>
+        </div>
+      </div>
+
+      <div class="score-cell">
+        <div class="score-cell-label">Remote Desert Region Client Access</div>
+        <div class="score-cell-sub">By June 2027 &middot; growth in service delivered to these communities</div>
+
+        <div class="metric-block">
+          <div class="mlabel">Service units delivered</div>
+          <div class="pair-inputs"><input type="number" id="lag2unitsCur" value="0" min="0"><span>/</span><input type="number" id="lag2unitsTgt" value="0" min="0"><span>target</span></div>
+        </div>
+        <div class="metric-block">
+          <div class="mlabel">Unduplicated clients served</div>
+          <div class="pair-inputs"><input type="number" id="lag2clientsCur" value="0" min="0"><span>/</span><input type="number" id="lag2clientsTgt" value="0" min="0"><span>target</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- GROUP A: DRIVES PROVIDER COVERAGE -->
+  <div class="section-heading">
+    <h2>What We're Driving &middot; Leading Measures</h2>
+    <span class="hint">Reviewed weekly &mdash; these move first, the score follows</span>
+  </div>
+  <span class="group-feeds">&rarr; Drives Provider Coverage</span>
+  <div class="leading-grid">
+
+    <div class="lcard">
+      <div class="lcard-head">
+        <div class="lcard-title">Provider Readiness &amp; Outreach</div>
+        <div class="lcard-due">Jul&ndash;Dec '26</div>
+      </div>
+      <div class="lcard-bar-wrap"><div class="lcard-bar" id="l3bar"></div></div>
+      <div class="lcard-pct"><b id="l3pct">0%</b> complete</div>
+      <div class="metric-row headline"><span class="mname">Readiness-validated &amp; self-reported ready to bid</span><input type="number" id="m3cur" value="0" min="0"><span class="slash">/</span><input type="number" id="m3tgt" value="8" min="0"></div>
+      <div class="metric-row"><span class="mname">Providers engaged</span><input type="number" id="m2cur" value="0" min="0"><span class="slash">/</span><input type="number" id="m2tgt" value="15" min="0"></div>
+      <div class="metric-row"><span class="mname">Vendor workshops held</span><input type="number" id="m1cur" value="0" min="0"><span class="slash">/</span><input type="number" id="m1tgt" value="4" min="0"></div>
+      <div class="metric-row"><span class="mname">Jurisdictions benchmarked</span><input type="number" id="m4cur" value="0" min="0"><span class="slash">/</span><input type="number" id="m4tgt" value="4" min="0"></div>
+    </div>
+
+    <div class="lcard">
+      <div class="lcard-head">
+        <div class="lcard-title">Contracting &amp; RFP Workflow Efficiency</div>
+        <div class="lcard-due">Ongoing</div>
+      </div>
+      <div class="lcard-formula">Formula: % reduction in days from RFP release to contract execution, vs. prior-cycle baseline.</div>
+      <div class="date-row">
+        <span class="date-label">Baseline (last cycle)</span>
+        <input type="date" id="baseRelease" value="2025-01-13">
+        <span class="arrow">&rarr;</span>
+        <input type="date" id="baseExec" value="2025-06-18">
+      </div>
+      <div class="date-row">
+        <span class="date-label">This cycle</span>
+        <input type="date" id="curRelease">
+        <span class="arrow">&rarr;</span>
+        <input type="date" id="curExec">
+      </div>
+      <div class="target-line">
+        <span class="unit">Target reduction</span>
+        <input type="number" id="effTgt" value="20" min="0" max="100"><span class="unit">%</span>
+      </div>
+      <div class="lcard-bar-wrap"><div class="lcard-bar" id="effbar"></div></div>
+      <div class="lcard-pct" id="effNote">Baseline: 156 days.</div>
+    </div>
+
+    <div class="lcard">
+      <div class="lcard-head">
+        <div class="lcard-title">RFP &amp; Contract Process Readiness Gate</div>
+        <div class="lcard-due">Due Aug '26</div>
+      </div>
+      <div class="lcard-bar-wrap"><div class="lcard-bar" id="l1bar"></div></div>
+      <div class="lcard-pct"><b id="l1pct">0%</b> complete</div>
+      <label class="check-item"><input type="checkbox" id="l1a">RFP templates revised (units, geography, deliverables)</label>
+      <label class="check-item"><input type="checkbox" id="l1b">Contract language updated (NTE vs. allocation clarified)</label>
+      <label class="check-item"><input type="checkbox" id="l1c">Program&ndash;Fiscal&ndash;Contracts workflow streamlined</label>
+    </div>
+
+    <div class="lcard">
+      <div class="lcard-head">
+        <div class="lcard-title">Fiscal Guidance Readiness Gate</div>
+        <div class="lcard-due">Due Jul '26</div>
+      </div>
+      <div class="lcard-bar-wrap"><div class="lcard-bar" id="l2bar"></div></div>
+      <div class="lcard-pct"><b id="l2pct">0%</b> complete</div>
+      <label class="check-item"><input type="checkbox" id="l2a">Plain-language funding guide published</label>
+      <label class="check-item"><input type="checkbox" id="l2b">CDA-aligned budget instructions finalized</label>
+      <label class="check-item"><input type="checkbox" id="l2c">Annotated example budget published</label>
+      <label class="check-item"><input type="checkbox" id="l2d">Invoicing procedures streamlined</label>
+    </div>
+
+  </div>
+
+  <!-- GROUP B: DRIVES CLIENT ACCESS -->
+  <div class="section-heading" style="margin-top:8px;">
+    <h2 style="font-size:17px;">&nbsp;</h2>
+  </div>
+  <span class="group-feeds" style="background:var(--navy-700);">&rarr; Drives Client Access</span>
+  <div class="leading-grid single">
+    <div class="lcard">
+      <div class="lcard-head">
+        <div class="lcard-title">Post-Award Onboarding Speed</div>
+        <div class="lcard-due">Jan&ndash;Jun '27</div>
+      </div>
+      <div class="lcard-formula">Average days from contract execution to first service delivery, for newly awarded Remote Desert Region providers. Lower is better.</div>
+      <div class="target-line">
+        <input type="number" id="onbCur" value="0" min="0"><span class="unit">days &middot; target</span>
+        <input type="number" id="onbTgt" value="30" min="0"><span class="unit">days</span>
+      </div>
+      <div class="lcard-bar-wrap"><div class="lcard-bar" id="onbbar"></div></div>
+      <div class="no-data-note" id="onbNote">Tracking begins once January 2027 awards are executed.</div>
+    </div>
+  </div>
+
+  <!-- CADENCE -->
+  <div class="cadence">
+    <div class="cadence-items">
+      <div class="cadence-item"><span class="k">Weekly check-in</span><span class="v" id="nextMonday">Mondays</span></div>
+      <div class="cadence-item"><span class="k">Monthly</span><span class="v">Combined Fiscal/Program Meeting</span></div>
+      <div class="cadence-item"><span class="k">Quarterly</span><span class="v">Leadership WIG Review</span></div>
+      <div class="cadence-item"><span class="k">Last updated</span><span class="v saved-note" id="lastUpdated">Not yet saved</span></div>
+    </div>
+    <div class="cadence-actions">
+      <button class="reset-btn" id="resetBtn">Reset all data</button>
+      <button class="save-btn" id="saveBtn">Save Updates</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const STORE_KEY = 'wig-scoreboard-state-v2';
+
+  const today = new Date();
+  const programStart = new Date('2026-06-01');
+  const wigDeadline   = new Date('2027-06-30');
+  const rfpCycle      = new Date('2027-01-01');
+  const milestones = [
+    new Date('2026-06-01'), new Date('2026-07-01'), new Date('2026-08-01'),
+    new Date('2026-12-01'), new Date('2027-01-01'), new Date('2027-06-30')
+  ];
+
+  function daysBetween(a,b){ return Math.round((b-a)/86400000); }
+
+  $('cdWig').textContent = Math.max(daysBetween(today, wigDeadline), 0);
+  $('cdRfp').textContent = Math.max(daysBetween(today, rfpCycle), 0);
+
+  const nm = new Date(today);
+  nm.setDate(today.getDate() + ((1 - today.getDay() + 7) % 7 || 7));
+  $('nextMonday').textContent = 'Mondays · next ' + nm.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+
+  const totalSpan = milestones[5] - milestones[0];
+  let todayPct = ((today - milestones[0]) / totalSpan) * 100;
+  todayPct = Math.min(Math.max(todayPct, 0), 100);
+  $('timelineFill').style.width = todayPct + '%';
+  $('tlToday').style.left = todayPct + '%';
+  $('tlToday').textContent = "Today · " + today.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+
+  const track = $('timelineTrack');
+  milestones.forEach((m,i)=>{
+    if(i===0||i===5) return;
+    const pct = ((m - milestones[0]) / totalSpan) * 100;
+    const dot = document.createElement('div');
+    dot.className = 'tl-marker' + (m < today ? ' done' : '');
+    dot.style.left = pct + '%';
+    track.appendChild(dot);
+  });
+
+  function applyStatusColor(v){
+    $('statusPill').className = 'status-pill ' + (v==='ontrack'?'status-ontrack':v==='watch'?'status-watch':'status-risk');
+  }
+  $('statusSelect').addEventListener('change', e => applyStatusColor(e.target.value));
+
+  function paceClassByDeadline(pctComplete, deadline){
+    const elapsed = (today - programStart) / (deadline - programStart);
+    const elapsedPct = Math.min(Math.max(elapsed,0),1) * 100;
+    if (pctComplete + 12 >= elapsedPct) return 'pace-onpace';
+    if (pctComplete + 30 >= elapsedPct) return 'pace-watch';
+    return 'pace-behind';
+  }
+
+  function paceClassByRatio(current, target, lowerIsBetter){
+    current = Number(current)||0; target = Number(target)||0;
+    if(current <= 0) return 'pace-neutral';
+    let ratio;
+    if(lowerIsBetter){
+      ratio = target > 0 ? Math.min(target/current,1) : 0;
+    } else {
+      ratio = target > 0 ? Math.min(current/target,1) : 0;
+    }
+    if(ratio >= 0.85) return 'pace-onpace';
+    if(ratio >= 0.5) return 'pace-watch';
+    return 'pace-behind';
+  }
+
+  // ---- readiness gate 1 ----
+  function updateL1(){
+    const checks = [$('l1a').checked, $('l1b').checked, $('l1c').checked];
+    const pct = Math.round(checks.filter(Boolean).length / checks.length * 100);
+    $('l1pct').textContent = pct + '%';
+    const bar = $('l1bar');
+    bar.style.width = pct + '%';
+    bar.className = 'lcard-bar ' + paceClassByDeadline(pct, new Date('2026-08-01'));
+  }
+  ['l1a','l1b','l1c'].forEach(id => $(id).addEventListener('change', updateL1));
+
+  // ---- readiness gate 2 ----
+  function updateL2(){
+    const checks = [$('l2a').checked, $('l2b').checked, $('l2c').checked, $('l2d').checked];
+    const pct = Math.round(checks.filter(Boolean).length / checks.length * 100);
+    $('l2pct').textContent = pct + '%';
+    const bar = $('l2bar');
+    bar.style.width = pct + '%';
+    bar.className = 'lcard-bar ' + paceClassByDeadline(pct, new Date('2026-07-01'));
+  }
+  ['l2a','l2b','l2c','l2d'].forEach(id => $(id).addEventListener('change', updateL2));
+
+  // ---- provider readiness & outreach ----
+  function ratio(cur, tgt){ tgt = Number(tgt); cur = Number(cur); return tgt > 0 ? Math.min(cur/tgt,1) : 0; }
+  function updateL3(){
+    const pairs = [['m3cur','m3tgt'],['m2cur','m2tgt'],['m1cur','m1tgt'],['m4cur','m4tgt']];
+    const ratios = pairs.map(([c,t]) => ratio($(c).value, $(t).value));
+    const pct = Math.round(ratios.reduce((a,b)=>a+b,0) / ratios.length * 100);
+    $('l3pct').textContent = pct + '%';
+    const bar = $('l3bar');
+    bar.style.width = pct + '%';
+    bar.className = 'lcard-bar ' + paceClassByDeadline(pct, new Date('2026-12-01'));
+  }
+  ['m1cur','m1tgt','m2cur','m2tgt','m3cur','m3tgt','m4cur','m4tgt'].forEach(id => $(id).addEventListener('input', updateL3));
+
+  // ---- workflow efficiency (leading, recurring) ----
+  function daysBetweenDates(d1,d2){
+    if(!d1 || !d2) return null;
+    const a = new Date(d1), b = new Date(d2);
+    if(isNaN(a) || isNaN(b)) return null;
+    return Math.round((b-a)/86400000);
+  }
+  function effPaceClass(pctReduction, tgt){
+    const ratio = tgt>0 ? pctReduction/tgt : 0;
+    if(ratio >= 0.85) return 'pace-onpace';
+    if(ratio >= 0.5) return 'pace-watch';
+    return 'pace-behind';
+  }
+  function updateEff(){
+    const baseDays = daysBetweenDates($('baseRelease').value, $('baseExec').value);
+    const curDays = daysBetweenDates($('curRelease').value, $('curExec').value);
+    const tgt = Number($('effTgt').value)||20;
+    const bar = $('effbar');
+    const note = $('effNote');
+
+    if(baseDays === null || baseDays <= 0){
+      bar.style.width = '0%'; bar.className = 'lcard-bar pace-neutral';
+      note.textContent = 'Enter baseline RFP release and execution dates.';
+      return;
+    }
+    const targetDays = Math.round(baseDays * (1 - tgt/100));
+
+    if(curDays === null){
+      bar.style.width = '0%'; bar.className = 'lcard-bar pace-neutral';
+      note.textContent = 'Baseline: ' + baseDays + ' days. Target: \u2264' + targetDays + ' days \u2014 awaiting this cycle\u2019s dates.';
+      return;
+    }
+    const pctReduction = ((baseDays - curDays) / baseDays) * 100;
+    const pct = Math.max(Math.min(pctReduction / tgt * 100, 100), 0);
+    bar.style.width = pct + '%';
+    bar.className = 'lcard-bar ' + effPaceClass(pctReduction, tgt);
+    const sign = pctReduction >= 0 ? '\u2212' : '+';
+    note.textContent = 'This cycle: ' + curDays + ' days (' + sign + Math.abs(Math.round(pctReduction)) + '% vs. baseline). Target: \u2264' + targetDays + ' days.';
+  }
+  ['baseRelease','baseExec','curRelease','curExec','effTgt'].forEach(id => $(id).addEventListener('input', updateEff));
+
+  // ---- post-award onboarding speed (lower is better) ----
+  function updateOnb(){
+    const cur = Number($('onbCur').value)||0;
+    const tgt = Number($('onbTgt').value)||30;
+    const today_ = new Date();
+    const bar = $('onbbar');
+    if(cur <= 0){
+      bar.style.width = '0%';
+      bar.className = 'lcard-bar pace-neutral';
+      $('onbNote').textContent = today_ < rfpCycle ? 'Tracking begins once January 2027 awards are executed.' : 'No onboarding data entered yet.';
+    } else {
+      const pct = tgt>0 ? Math.min(tgt/cur*100,100) : 0;
+      bar.style.width = pct + '%';
+      bar.className = 'lcard-bar ' + paceClassByRatio(cur, tgt, true);
+      $('onbNote').textContent = cur + ' days average so far, vs. ' + tgt + '-day target.';
+    }
+  }
+  ['onbCur','onbTgt'].forEach(id => $(id).addEventListener('input', updateOnb));
+
+  // ---- remote desert region provider coverage (shared target) ----
+  function updateLag1Coverage(){
+    const tgt = Number($('lag1sharedTgt').value)||0;
+    const communities = [
+      {cur:'lag1trona', tag:'lag1tronaTag'},
+      {cur:'lag1needles', tag:'lag1needlesTag'},
+      {cur:'lag1lucerne', tag:'lag1lucerneTag'}
+    ];
+    let met = 0;
+    communities.forEach(c=>{
+      const cur = Number($(c.cur).value)||0;
+      const ok = tgt>0 && cur>=tgt;
+      if(ok) met++;
+      const tagEl = $(c.tag);
+      tagEl.textContent = ok ? '✓ at target' : '';
+      tagEl.style.color = ok ? 'var(--gold-300)' : 'var(--slate-500)';
+    });
+    $('lag1MetCount').textContent = met;
+  }
+  ['lag1trona','lag1needles','lag1lucerne','lag1sharedTgt'].forEach(id => $(id).addEventListener('input', updateLag1Coverage));
+
+  // ---- lag 1 toggle ----
+  let lag1On = false;
+  function renderLag1Bulb(){ $('lag1bulb').className = 'toggle-bulb' + (lag1On ? ' on' : ''); }
+  $('lag1toggle').addEventListener('click', () => { lag1On = !lag1On; renderLag1Bulb(); });
+
+  applyStatusColor('ontrack');
+  updateL1(); updateL2(); updateL3(); updateEff(); updateOnb(); updateLag1Coverage(); renderLag1Bulb();
+
+  // ---- persistence ----
+  const fieldIds = [
+    'l1a','l1b','l1c','l2a','l2b','l2c','l2d',
+    'm1cur','m1tgt','m2cur','m2tgt','m3cur','m3tgt','m4cur','m4tgt',
+    'baseRelease','baseExec','curRelease','curExec','effTgt','onbCur','onbTgt',
+    'lag1trona','lag1needles','lag1lucerne','lag1sharedTgt',
+    'lag2unitsCur','lag2unitsTgt','lag2clientsCur','lag2clientsTgt'
+  ];
+
+  function collectState(){
+    const state = { status: $('statusSelect').value, lag1On: lag1On, fields:{} };
+    fieldIds.forEach(id=>{
+      const el = $(id);
+      state.fields[id] = el.type === 'checkbox' ? el.checked : el.value;
+    });
+    return state;
+  }
+
+  function applyState(state){
+    if(!state) return;
+    if(state.status){ $('statusSelect').value = state.status; applyStatusColor(state.status); }
+    if(typeof state.lag1On === 'boolean'){ lag1On = state.lag1On; renderLag1Bulb(); }
+    if(state.fields){
+      Object.keys(state.fields).forEach(id=>{
+        const el = $(id);
+        if(!el) return;
+        if(el.type === 'checkbox') el.checked = state.fields[id];
+        else el.value = state.fields[id];
+      });
+    }
+    updateL1(); updateL2(); updateL3(); updateEff(); updateOnb(); updateLag1Coverage();
+  }
+
+  async function loadState(){
+    try{
+      const result = await window.storage.get(STORE_KEY, false);
+      if(result && result.value){
+        const parsed = JSON.parse(result.value);
+        applyState(parsed.state);
+        if(parsed.savedAt) $('lastUpdated').textContent = new Date(parsed.savedAt).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+      }
+    }catch(e){}
+  }
+
+  async function saveState(){
+    const payload = { state: collectState(), savedAt: Date.now() };
+    try{
+      const res = await window.storage.set(STORE_KEY, JSON.stringify(payload), false);
+      if(res){
+        $('lastUpdated').textContent = new Date(payload.savedAt).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+        const btn = $('saveBtn');
+        const orig = btn.textContent;
+        btn.textContent = 'Saved ✓';
+        setTimeout(()=>btn.textContent = orig, 1400);
+      }
+    }catch(e){
+      alert('Could not save right now — your changes are still visible, but try saving again in a moment.');
+    }
+  }
+
+  $('saveBtn').addEventListener('click', saveState);
+  $('resetBtn').addEventListener('click', async () => {
+    if(!confirm('Reset all entered data on this scoreboard? This cannot be undone.')) return;
+    try{ await window.storage.delete(STORE_KEY, false); }catch(e){}
+    location.reload();
+  });
+
+  loadState();
+})();
+</script>
+</body>
+</html>
